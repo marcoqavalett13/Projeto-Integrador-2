@@ -87,7 +87,10 @@ class Metro:
             if linha_atual:
                 if linha_atual[0] == "ESTAÇÃO CENTRAL":
                     caminho_linhas.append("Estação Central")
-                else:
+                elif len(caminho_linhas) > 0:
+                    if ("Linha " + linha_atual[1]) != caminho_linhas[-1]:
+                        caminho_linhas.append("Linha " + linha_atual[1])
+                elif len(caminho_linhas) == 0:
                     caminho_linhas.append("Linha " + linha_atual[1])
                 prox_estacao = linha_atual[0]
             else:
