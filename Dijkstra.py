@@ -1,6 +1,6 @@
-import tkinter as tk 
+import tkinter as tk
+from tkinter import ttk
 from collections import defaultdict
-from itertools import groupby
 
 class Metro:
     def __init__(self):
@@ -31,13 +31,16 @@ class Metro:
             return
 
         if 'ESTAÇÃO CENTRAL' in self.grafo[estOrigem]:
-            del self.grafo[estOrigem]['ESTAÇÃO CENTRAL'] 
+            del self.grafo[estOrigem]['ESTAÇÃO CENTRAL']
             self.adicionar_conexao(estDestino, 'ESTAÇÃO CENTRAL', distancia, linha)
 
         self.grafo[estOrigem][estDestino].append((distancia, linha))
         self.estacao_nas_linhas[estOrigem].add(linha)
         self.estacao_nas_linhas[estDestino].add(linha)
-        print(self.estacao_nas_linhas)
+
+        # Atualizar comboboxes
+        atualizar_comboboxes()
+
 
     def remover_conexao(self, estacao_origem, estacao_destino, linha):
         estOrigem = estacao_origem.strip().upper()
@@ -54,6 +57,16 @@ class Metro:
                 self.grafo[estOrigem][estDestino] = estado_original
                 return f"Não é possível remover o trecho {estacao_origem.title()} até {estacao_destino.title()} na linha {linha}, pois isso deixaria a estação sem nenhuma rota originária."
 
+            # Verifica se a estação ainda tem conexões
+            if not self.grafo[estOrigem]:
+                del self.grafo[estOrigem]
+                del self.estacao_nas_linhas[estOrigem]
+
+            if not self.grafo[estDestino]:
+                del self.grafo[estDestino]
+                del self.estacao_nas_linhas[estDestino]
+
+            atualizar_comboboxes()
             return f"Conexão {estacao_origem.title()} até {estacao_destino.title()} na linha {linha} removida."
         else:
             return f"Nenhuma conexão encontrada no trecho {estacao_origem.title()} até {estacao_destino.title()} na linha {linha}."
@@ -105,205 +118,122 @@ class Metro:
 
 metro = Metro()
 
-# teste
-metro.adicionar_conexao('Estação Central', 'A', 10, '1')
-metro.adicionar_conexao('A', 'B', 10, '1')
-metro.adicionar_conexao('B', 'C', 10, '1')
-metro.adicionar_conexao('C', 'D', 10, '1')
-metro.adicionar_conexao('D', 'Estação Central', 10, '1')
 
-metro.adicionar_conexao('Estação Central', '1', 11, '2')
-metro.adicionar_conexao('1', 'B', 11, '2')
-metro.adicionar_conexao('B', '2', 1, '2')
-metro.adicionar_conexao('2', '3', 10, '2')
-metro.adicionar_conexao('3', 'Estação Central', 10, '2')
+# Atualizar comboboxes
+def atualizar_comboboxes():
+    estacoes = set(metro.grafo.keys())
+    for destinos in metro.grafo.values():
+        estacoes.update(destinos.keys())
+    estacoes = sorted(estacoes)
+    origem_combobox['values'] = estacoes
+    destino_combobox['values'] = estacoes
 
-metro.adicionar_conexao('Estação Central', 'O', 25, '3')
-metro.adicionar_conexao('O', 'N', 15, '3')
-metro.adicionar_conexao('N', '3', 10, '3')
-metro.adicionar_conexao('3', 'M', 1, '3')
-metro.adicionar_conexao('M', 'Estação Central', 10, '3')
+# Função para abrir a janela de cadastro
+def abrir_janela_cadastro():
+    cadastro_window = tk.Toplevel(root)
+    cadastro_window.title("Cadastro de Conexão")
 
-metro.adicionar_conexao('Estação Central', 'A', 40, '4')
-metro.adicionar_conexao('A', 'B', 40, '4')
-metro.adicionar_conexao('B', 'C', 40, '4')
-metro.adicionar_conexao('C', 'D', 40, '4')
-metro.adicionar_conexao('D', 'Estação Central', 40, '4')
+    origem_label = tk.Label(cadastro_window, text="Estação de Origem:")
+    origem_label.grid(row=0, column=0, padx=10, pady=5)
 
-# # 1
-# metro.adicionar_conexao('Estação Central', 'Praça dos Girassóis', 7, '1')
-# metro.adicionar_conexao('Praça dos Girassóis', 'Avenida das Flores', 5, '1')
-# metro.adicionar_conexao('Avenida das Flores', 'Parque das Aves', 10, '1')
-# metro.adicionar_conexao('Parque das Aves', 'Jardim Primavera', 8, '1')
-# metro.adicionar_conexao('Jardim Primavera', 'Lago Azul', 12, '1')
-# metro.adicionar_conexao('Lago Azul', 'Bosque Verde', 6, '1')
-# metro.adicionar_conexao('Bosque Verde', 'Centro Comercial', 9, '1')
-# metro.adicionar_conexao('Centro Comercial', 'Praia da Lua', 15, '1')
-# metro.adicionar_conexao('Praia da Lua', 'Mirante do Sol', 7, '1')
-# metro.adicionar_conexao('Mirante do Sol', 'Estação Central', 5, '1')
+    origem_entry = tk.Entry(cadastro_window)
+    origem_entry.grid(row=0, column=1, padx=10, pady=5)
 
-# # 2
-# metro.adicionar_conexao('Estação Central', 'Praça das Artes', 6, '2')
-# metro.adicionar_conexao('Praça das Artes', 'Rua do Comércio', 8, '2')
-# metro.adicionar_conexao('Rua do Comércio', 'Avenida Central', 7, '2')
-# metro.adicionar_conexao('Avenida Central', 'Parque dos Esportes', 10, '2')
-# metro.adicionar_conexao('Parque dos Esportes', 'Estádio Municipal', 5, '2')
-# metro.adicionar_conexao('Estádio Municipal', 'Estação Central', 9, '2')
+    destino_label = tk.Label(cadastro_window, text="Estação de Destino:")
+    destino_label.grid(row=1, column=0, padx=10, pady=5)
 
-# # 3
-# metro.adicionar_conexao('Estação Central', 'Praça da Liberdade', 7, '3')
-# metro.adicionar_conexao('Praça da Liberdade', 'Avenida da Paz', 6, '3')
-# metro.adicionar_conexao('Avenida da Paz', 'Jardim Botânico', 8, '3')
-# metro.adicionar_conexao('Jardim Botânico', 'Parque das Flores', 12, '3')
-# metro.adicionar_conexao('Parque das Flores', 'Estação Central', 10, '3')
+    destino_entry = tk.Entry(cadastro_window)
+    destino_entry.grid(row=1, column=1, padx=10, pady=5)
 
-# # 4
-# metro.adicionar_conexao('Estação Central', 'Praça dos Trabalhadores', 5, '4')
-# metro.adicionar_conexao('Praça dos Trabalhadores', 'Avenida Industrial', 9, '4')
-# metro.adicionar_conexao('Avenida Industrial', 'Parque Industrial', 11, '4')
-# metro.adicionar_conexao('Parque Industrial', 'Zona Residencial', 7, '4')
-# metro.adicionar_conexao('Zona Residencial', 'Estação Central', 8, '4')
+    linha_label = tk.Label(cadastro_window, text="Linha:")
+    linha_label.grid(row=2, column=0, padx=10, pady=5)
 
-# # 5
-# metro.adicionar_conexao('Estação Central', 'Praça da Cultura', 6, '5')
-# metro.adicionar_conexao('Praça da Cultura', 'Avenida do Saber', 9, '5')
-# metro.adicionar_conexao('Avenida do Saber', 'Universidade', 10, '5')
-# metro.adicionar_conexao('Universidade', 'Centro Tecnológico', 8, '5')
-# metro.adicionar_conexao('Centro Tecnológico', 'Estação Central', 11, '5')
+    linha_entry = tk.Entry(cadastro_window)
+    linha_entry.grid(row=2, column=1, padx=10, pady=5)
 
-# # 6
-# metro.adicionar_conexao('Estação Central', 'Praça do Mercado', 7, '6')
-# metro.adicionar_conexao('Praça do Mercado', 'Rua das Lojas', 5, '6')
-# metro.adicionar_conexao('Rua das Lojas', 'Avenida do Progresso', 10, '6')
-# metro.adicionar_conexao('Avenida do Progresso', 'Centro Financeiro', 8, '6')
-# metro.adicionar_conexao('Centro Financeiro', 'Bairro Residencial', 12, '6')
-# metro.adicionar_conexao('Bairro Residencial', 'Estação Central', 6, '6')
+    distancia_label = tk.Label(cadastro_window, text="Distância:")
+    distancia_label.grid(row=3, column=0, padx=10, pady=5)
 
-# # 7
-# metro.adicionar_conexao('Estação Central', 'Praça do Porto', 9, '7')
-# metro.adicionar_conexao('Praça do Porto', 'Avenida Marítima', 6, '7')
-# metro.adicionar_conexao('Avenida Marítima', 'Píer Turístico', 8, '7')
-# metro.adicionar_conexao('Píer Turístico', 'Terminal de Cruzeiros', 10, '7')
-# metro.adicionar_conexao('Terminal de Cruzeiros', 'Estação Central', 7, '7')
+    distancia_entry = tk.Entry(cadastro_window)
+    distancia_entry.grid(row=3, column=1, padx=10, pady=5)
 
-# # 8
-# metro.adicionar_conexao('Estação Central', 'Praça das Fontes', 8, '8')
-# metro.adicionar_conexao('Praça das Fontes', 'Avenida dos Lagos', 9, '8')
-# metro.adicionar_conexao('Avenida dos Lagos', 'Parque Aquático', 6, '8')
-# metro.adicionar_conexao('Parque Aquático', 'Bairro das Águas', 11, '8')
-# metro.adicionar_conexao('Bairro das Águas', 'Estação Central', 7, '8')
+    def add_new():
+        resultado_text.delete('1.0', tk.END)
+        new_origem = origem_entry.get().strip().upper()
+        new_destino = destino_entry.get().strip().upper()
+        new_distancia = distancia_entry.get()
+        new_linha = linha_entry.get()
 
-# # 9
-# metro.adicionar_conexao('Estação Central', 'Praça das Nações', 7, '9')
-# metro.adicionar_conexao('Praça das Nações', 'Avenida dos Monumentos', 9, '9')
-# metro.adicionar_conexao('Avenida dos Monumentos', 'Museu Histórico', 8, '9')
-# metro.adicionar_conexao('Museu Histórico', 'Praça dos Patrimônios', 12, '9')
-# metro.adicionar_conexao('Praça dos Patrimônios', 'Estação Central', 6, '9')
+        metro.adicionar_conexao(new_origem, new_destino, int(new_distancia), new_linha)
+        origem_entry.delete(0, tk.END)
+        destino_entry.delete(0, tk.END)
+        distancia_entry.delete(0, tk.END)
+        linha_entry.delete(0, tk.END)
+        resultado_str = f"Deslocamento de {new_origem.title()} até {new_destino.title()} adicionado na linha {new_linha}, com distância de {new_distancia}."
+        resultado_label.config(text=resultado_str)
+        atualizar_comboboxes()
 
-# # 10
-# metro.adicionar_conexao('Estação Central', 'Praça do Teatro', 6, '10')
-# metro.adicionar_conexao('Praça do Teatro', 'Avenida da Arte', 7, '10')
-# metro.adicionar_conexao('Avenida da Arte', 'Galeria de Exposições', 9, '10')
-# metro.adicionar_conexao('Galeria de Exposições', 'Centro Cultural', 8, '10')
-# metro.adicionar_conexao('Centro Cultural', 'Estação Central', 10, '10')
-# metro.adicionar_conexao('Bosque Municipal', 'Trilha Natural', 10, '16')
-# metro.adicionar_conexao('Trilha Natural', 'Estação Central', 6, '16')
+    def pop_old():
+        resultado_text.delete('1.0', tk.END)
+        new_origem = origem_entry.get().strip().upper()
+        new_destino = destino_entry.get().strip().upper()
+        new_linha = linha_entry.get()
+        origem_entry.delete(0, tk.END)
+        destino_entry.delete(0, tk.END)
+        linha_entry.delete(0, tk.END)
 
-# # 17
-# metro.adicionar_conexao('Estação Central', 'Praça dos Viajantes', 7, '17')
-# metro.adicionar_conexao('Praça dos Viajantes', 'Avenida das Viagens', 6, '17')
-# metro.adicionar_conexao('Avenida das Viagens', 'Terminal Rodoviário', 9, '17')
-# metro.adicionar_conexao('Terminal Rodoviário', 'Estação Ferroviária', 8, '17')
-# metro.adicionar_conexao('Estação Ferroviária', 'Estação Central', 11, '17')
+        remocao = metro.remover_conexao(new_origem, new_destino, new_linha)
+        resultado_label.config(text=remocao)
+        atualizar_comboboxes()
 
-# # 18
-# metro.adicionar_conexao('Estação Central', 'Praça da Juventude', 8, '18')
-# metro.adicionar_conexao('Praça da Juventude', 'Avenida da Diversão', 7, '18')
-# metro.adicionar_conexao('Avenida da Diversão', 'Parque de Diversões', 10, '18')
-# metro.adicionar_conexao('Parque de Diversões', 'Praça da Aventura', 9, '18')
-# metro.adicionar_conexao('Praça da Aventura', 'Estação Central', 6, '18')
+    adicionar_button = tk.Button(cadastro_window, text="Adicionar Conexão", command=add_new)
+    adicionar_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
 
-# # 19
-# metro.adicionar_conexao('Estação Central', 'Praça do Sol', 9, '19')
-# metro.adicionar_conexao('Praça do Sol', 'Avenida da Luz', 8, '19')
-# metro.adicionar_conexao('Avenida da Luz', 'Parque Solar', 7, '19')
-# metro.adicionar_conexao('Parque Solar', 'Avenida da Energia', 10, '19')
-# metro.adicionar_conexao('Avenida da Energia', 'Estação Central', 6, '19')
+    remover_button = tk.Button(cadastro_window, text="Remover Conexão", command=pop_old)
+    remover_button.grid(row=4, column=3, columnspan=2, padx=10, pady=10)
 
-# # 20
-# metro.adicionar_conexao('Estação Central', 'Praça da Noite', 7, '20')
-# metro.adicionar_conexao('Praça da Noite', 'Avenida das Estrelas', 6, '20')
-# metro.adicionar_conexao('Avenida das Estrelas', 'Boate Central', 9, '20')
-# metro.adicionar_conexao('Boate Central', 'Praça dos Sonhos', 8, '20')
-# metro.adicionar_conexao('Praça dos Sonhos', 'Estação Central', 11, '20')
-
-def add_new():
-    resultado_text.delete('1.0', tk.END)
-    new_origem = origem_entry.get().strip().upper()
-    new_destino = destino_entry.get().strip().upper()
-    new_distancia = distancia_entry.get()
-    new_linha = linha_entry.get()
-
-    metro.adicionar_conexao(new_origem, new_destino, int(new_distancia), new_linha)
-    origem_entry.delete(0, tk.END)
-    destino_entry.delete(0, tk.END)
-    distancia_entry.delete(0, tk.END)
-    linha_entry.delete(0, tk.END)
-    resultado_str = f"Deslocamento de {new_origem.title()} até {new_destino.title()} adicionado na linha {new_linha}, com distância de {new_distancia}."
-    resultado_label.config(text=resultado_str)
-
-def pop_old():
-    resultado_text.delete('1.0', tk.END)
-    new_origem = origem_entry.get().strip().upper()
-    new_destino = destino_entry.get().strip().upper()
-    new_linha = linha_entry.get()
-    origem_entry.delete(0, tk.END)
-    destino_entry.delete(0, tk.END)
-    linha_entry.delete(0, tk.END)
-
-    remocao = metro.remover_conexao(new_origem, new_destino, new_linha)
-    resultado_label.config(text=remocao)
-
+# Função para calcular o tempo de viagem
 def calcular_tempo_viagem(distancia_km, velocidade_media=60):
     tempo_horas = distancia_km / velocidade_media
-    
+
     horas = int(tempo_horas)
-    minutos = int((tempo_horas - horas) * 60)
-    
-    return f"{horas}:{minutos}h"
+    minutos = int((tempo_horas * 60) % 60)
+    segundos = int((tempo_horas * 3600) % 60)
 
+    return f"{horas} horas, {minutos} minutos e {segundos} segundos"
+
+# Função para printar o grafo
 def printar():
-    resultado_label.config(text='')
     resultado_text.delete('1.0', tk.END)
-
-    for estacao, conexoes in metro.grafo.items():
-        resultado_text.insert(tk.END, f'{estacao}:\n')
-        for destino, detalhes in conexoes.items():
-            detalhes_formatados = ', '.join(f"({distancia}, '{linha}')" for distancia, linha in detalhes)
+    for origem, destinos in metro.grafo.items():
+        resultado_text.insert(tk.END, f"{origem}:\n")
+        for destino, detalhes in destinos.items():
+            detalhes_formatados = ", ".join(f"({distancia} km, Linha {linha})" for distancia, linha in detalhes)
             resultado_text.insert(tk.END, f'  {destino}: [{detalhes_formatados}]\n')
-        resultado_text.insert(tk.END, '\n') 
+        resultado_text.insert(tk.END, '\n')
 
+# Função para encontrar o menor caminho
 def encontrar_menor_caminho():
     resultado_text.delete('1.0', tk.END)
-    estacao_origem = origem_entry.get().strip().upper()
-    estacao_destino = destino_entry.get().strip().upper()
+    estacao_origem = origem_combobox.get().strip().upper()
+    estacao_destino = destino_combobox.get().strip().upper()
 
     if estacao_origem != 'ESTAÇÃO CENTRAL' and not metro.pode_chegar_a_estacao_central(estacao_origem):
         resultado_label.config(text=f"Não é possível ir da Estação Central até {estacao_origem.title()}, favor inserir conexão à Estação.")
         return
 
-    if estacao_origem not in metro.estacao_nas_linhas: 
+    if estacao_origem not in metro.estacao_nas_linhas:
         resultado_str = f"Estação {estacao_origem.title()} não encontrada"
         resultado_label.config(text=resultado_str)
-        return 
-  
-    if estacao_destino not in metro.estacao_nas_linhas: 
+        return
+
+    if estacao_destino not in metro.estacao_nas_linhas:
         resultado_str = f"Estação {estacao_destino.title()} não encontrada"
         resultado_label.config(text=resultado_str)
-        return 
-    
+        return
+
     menor_caminho_distancia, menor_caminho_estacoes, trocas_de_linha = metro.dijkstra(estacao_origem, estacao_destino)
-    
+
     if "Linha sem nenhuma ligação final, favor adicionar o retorno à Estação Central no destino." in menor_caminho_estacoes:
         caminho_str = "Linha sem nenhuma ligação final, favor adicionar o retorno à Estação Central no destino."
         resultado_str = caminho_str
@@ -315,6 +245,8 @@ def encontrar_menor_caminho():
         resultado_str += "\nTrocas de linha:\n"
         resultado_str += " -> ".join(trocas_de_linha)
     resultado_label.config(text=resultado_str)
+
+    
 
 root = tk.Tk()
 root.title("Metrô de Erechim")
@@ -329,40 +261,48 @@ resultado_text['yscrollcommand'] = scroll.set
 origem_label = tk.Label(root, text="Estação de Origem:")
 origem_label.grid(row=0, column=0, padx=10, pady=5)
 
-origem_entry = tk.Entry(root)
-origem_entry.grid(row=0, column=1, padx=10, pady=5)
+origem_combobox = ttk.Combobox(root)
+origem_combobox.grid(row=0, column=1, padx=10, pady=5)
 
 destino_label = tk.Label(root, text="Estação de Destino:")
 destino_label.grid(row=1, column=0, padx=10, pady=5)
 
-destino_entry = tk.Entry(root)
-destino_entry.grid(row=1, column=1, padx=10, pady=5)
+destino_combobox = ttk.Combobox(root)
+destino_combobox.grid(row=1, column=1, padx=10, pady=5)
 
-linha_label = tk.Label(root, text="Linha:")
-linha_label.grid(row=2, column=0, padx=10, pady=5)
-
-linha_entry = tk.Entry(root)
-linha_entry.grid(row=2, column=1, padx=10, pady=5)
-
-distancia_label = tk.Label(root, text="Distância:")
-distancia_label.grid(row=3, column=0, padx=10, pady=5)
-
-distancia_entry = tk.Entry(root)
-distancia_entry.grid(row=3, column=1, padx=10, pady=5)
-
-adicionar_button = tk.Button(root, text="Adicionar Conexão", command=add_new)
-adicionar_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
-
-remover_button = tk.Button(root, text="Remover Conexão", command=pop_old)
-remover_button.grid(row=4, column=3, columnspan=2, padx=10, pady=10)
+adicionar_button = tk.Button(root, text="Cadastrar Conexão", command=abrir_janela_cadastro)
+adicionar_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
 calcular_button = tk.Button(root, text="Print Grafo", command=printar)
-calcular_button.grid(row=5, column=3, columnspan=2, padx=10, pady=10)
+calcular_button.grid(row=3, column=3, columnspan=2, padx=10, pady=10)
 
 print_button = tk.Button(root, text="Calcular", command=encontrar_menor_caminho)
-print_button.grid(row=5, column=0, columnspan=2, padx=10, pady=1)
+print_button.grid(row=3, column=0, columnspan=2, padx=10, pady=1)
 
 resultado_label = tk.Label(root, text="", justify=tk.LEFT)
-resultado_label.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
+resultado_label.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+
+#teste 01
+
+metro.adicionar_conexao('Estação Central', 'A', 10, '1')
+metro.adicionar_conexao('A', 'B', 10, '1')
+metro.adicionar_conexao('B', '2', 5, '1')
+metro.adicionar_conexao('2', '3', 5, '1')
+metro.adicionar_conexao('3', 'Estação Central', 50, '1')
+
+metro.adicionar_conexao('Estação Central', '1', 15, '2')
+metro.adicionar_conexao('1', 'B', 10, '2')
+metro.adicionar_conexao('B', '2', 5, '2')
+metro.adicionar_conexao('2', '3', 5, '2')
+metro.adicionar_conexao('3', 'Estação Central', 50, '2')
+
+metro.adicionar_conexao('Estação Central', 'O', 30, '3')
+metro.adicionar_conexao('O', 'N', 15, '3')
+metro.adicionar_conexao('N', '3', 10, '3')
+metro.adicionar_conexao('3', 'M', 5, '3')
+
+
+# Preencher comboboxes inicialmente
+atualizar_comboboxes()
 
 root.mainloop()
